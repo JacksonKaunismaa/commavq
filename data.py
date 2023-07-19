@@ -66,9 +66,16 @@ class CommaVQDataset():
     
     @staticmethod  # this method has a flaw where EOT tokens are rarer than in the nanogpt/all concatened case
     def subsample(example, self): # definitely shouldn't cache this
-        start_idx = np.random.randint(0, example['ids'].shape[0] - self.exp_cfg.block_size)
-        # start_idx = np.random.randint(0, 3)
-        selection = example['ids'][start_idx: start_idx + self.exp_cfg.block_size + 1]
+        # can improve this by making wrapping circular (means distribution over tokens is uniform)
+        # however, this does mean the model learns to repeat the same video after an EOS, but not really a big deal
+        full_len = example['ids'].shape[0]
+        start_idx = np.random.randint(0, full_len)
+        if start_idx + self.exp_cfg.block_size + 1 > full_len:
+            selection1 = example['ids'][start_idx:]
+            selection2 = example['ids'][:self.exp_cfg.block_size+1-(full_len - start_idx)]
+            selection = np.concatenate([selection1, selection2])
+        else:
+            selection = example['ids'][start_idx: start_idx + self.exp_cfg.block_size + 1]
         return {'xy': (selection[:-1], selection[1:])}
         
 
