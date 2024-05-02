@@ -15,6 +15,9 @@ from ..utils import get_rank, get_device_type
 
 
 class Encoder():  # or should it be called tokenizer
+    """Mirrors the text_dataset.encoder.Encoder class but for video data. Since the data is already tokenized, we can pass through 
+    the CommaVQ VAE decoder to get the actual frames. This functionality currently does not work since onnxruntime does not seem to
+    work well if you already have another model loaded in."""
     def __init__(self, decoder_path, load_decoder=False):
         self.bos_token = 1024  # can hardcode these since CommaVQ is fixed to bit width of 10
         self.eos_token = 1025
@@ -26,8 +29,8 @@ class Encoder():  # or should it be called tokenizer
                                              [provider])
 
 
-
     def decode(self, idx_list: np.ndarray):
+        """Pass the tokens through the CommaVQ VAE decoder to get the actual frames."""
         if not hasattr(self, "sess"):
             raise ValueError("Attempting to decode with a dummy encoder (ie. load_decoder=False).")
         pred_frames = []
